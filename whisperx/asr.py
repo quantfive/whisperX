@@ -169,16 +169,16 @@ class FasterWhisperPipeline(Pipeline):
         self, chunks, vad_segments, batch_size=None, num_workers=0, language=None, task=None, chunk_size=30, print_progress = False, combined_progress=False
     ) -> TranscriptionResult:
 
-        # def data(audio, segments):
-        #     for seg in segments:
-        #         f1 = int(seg['start'] * SAMPLE_RATE)
-        #         f2 = int(seg['end'] * SAMPLE_RATE)
-        #         # print(f2-f1)
-        #         yield {'inputs': audio[f1:f2]}
+        def data(audio, segments):
+            for seg in segments:
+                f1 = int(seg['start'] * SAMPLE_RATE)
+                f2 = int(seg['end'] * SAMPLE_RATE)
+                # print(f2-f1)
+                yield {'inputs': audio[f1:f2]}
 
-        def data(audio_chunks):
-            for chunk in audio_chunks:
-                yield chunk
+        # def data(audio_chunks):
+        #     for chunk in audio_chunks:
+        #         yield chunk
 
         print("@")
         if self.suppress_numerals:
@@ -193,7 +193,7 @@ class FasterWhisperPipeline(Pipeline):
         segments: List[SingleSegment] = []
         batch_size = batch_size or self._batch_size
         total_segments = len(vad_segments)
-        for idx, out in enumerate(self.__call__(data(chunks), batch_size=batch_size, num_workers=num_workers)):
+        for idx, out in enumerate(self.__call__(data(chunks, vad_segments), batch_size=batch_size, num_workers=num_workers)):
             if print_progress:
                 base_progress = ((idx + 1) / total_segments) * 100
                 percent_complete = base_progress / 2 if combined_progress else base_progress
