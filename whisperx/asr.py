@@ -173,6 +173,7 @@ class FasterWhisperPipeline(Pipeline):
     def transcribe(
         self, chunk: np.ndarray, vad_segment, batch_size=None, num_workers=0, language=None, task=None, chunk_size=30, print_progress = False, combined_progress=False
     ) -> TranscriptionResult:
+        print("!")
         if self.tokenizer is None:
             language = language or self.detect_language(chunk)
             task = task or "transcribe"
@@ -186,7 +187,7 @@ class FasterWhisperPipeline(Pipeline):
                 self.tokenizer = faster_whisper.tokenizer.Tokenizer(self.model.hf_tokenizer,
                                                                     self.model.model.is_multilingual, task=task,
                                                                     language=language)
-                
+        print("@")
         if self.suppress_numerals:
             previous_suppress_tokens = self.options.suppress_tokens
             numeral_symbol_tokens = find_numeral_symbol_tokens(self.tokenizer)
@@ -195,6 +196,7 @@ class FasterWhisperPipeline(Pipeline):
             new_suppressed_tokens = list(set(new_suppressed_tokens))
             self.options = self.options._replace(suppress_tokens=new_suppressed_tokens)
 
+        print("#")
         segments: List[SingleSegment] = []
         batch_size = batch_size or self._batch_size
         total_segments = len(vad_segment)
