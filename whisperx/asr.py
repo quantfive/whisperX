@@ -171,11 +171,19 @@ class FasterWhisperPipeline(Pipeline):
         return final_iterator
 
     def transcribe(
-        self, chunk: np.ndarray, vad_segment, batch_size=None, num_workers=0, language=None, task=None, chunk_size=30, print_progress = False, combined_progress=False
+        self, audio: Union[str, np.ndarray], vad_segments, batch_size=None, num_workers=0, language=None, task=None, chunk_size=30, print_progress = False, combined_progress=False
     ) -> TranscriptionResult:
+
+        def data(audio, segments):
+            for seg in segments:
+                f1 = int(seg['start'] * SAMPLE_RATE)
+                f2 = int(seg['end'] * SAMPLE_RATE)
+                # print(f2-f1)
+                yield {'inputs': audio[f1:f2]}
+
         print("!")
         if self.tokenizer is None:
-            language = language or self.detect_language(chunk)
+            language = language or self.detect_language(audio)
             task = task or "transcribe"
             self.tokenizer = faster_whisper.tokenizer.Tokenizer(self.model.hf_tokenizer,
                                                                 self.model.model.is_multilingual, task=task,
@@ -199,8 +207,8 @@ class FasterWhisperPipeline(Pipeline):
         print("#")
         segments: List[SingleSegment] = []
         batch_size = batch_size or self._batch_size
-        total_segments = len(vad_segment)
-        for idx, out in enumerate(self.__call__(chunk, batch_size=batch_size, num_workers=num_workers)):
+        total_segments = len(vad_segments)
+        for idx, out in enumerate(self.__call__(data(audio, vad_segments), batch_size=batch_size, num_workers=num_workers)):
             if print_progress:
                 base_progress = ((idx + 1) / total_segments) * 100
                 percent_complete = base_progress / 2 if combined_progress else base_progress
@@ -211,8 +219,8 @@ class FasterWhisperPipeline(Pipeline):
             segments.append(
                 {
                     "text": text,
-                    "start": round(vad_segment[idx]['start'], 3),
-                    "end": round(vad_segment[idx]['end'], 3)
+                    "start": round(vad_segments[idx]['start'], 3),
+                    "end": round(vad_segments[idx]['end'], 3)
                 }
             )
 
