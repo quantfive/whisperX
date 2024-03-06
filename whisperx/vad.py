@@ -1,23 +1,26 @@
 import hashlib
 import os
 import urllib
-from typing import Callable, Optional, Text, Union
+from pathlib import Path
+from io import IOBase
+from typing import Callable, Optional, Text, Union, Mapping
 
 import numpy as np
-import pandas as pd
-import torch
-from pyannote.audio import Model
-from pyannote.audio.core.io import AudioFile
 from pyannote.audio.pipelines import VoiceActivityDetection
 from pyannote.audio.pipelines.utils import PipelineModel
 from pyannote.core import Annotation, Segment, SlidingWindowFeature
 from tqdm import tqdm
 
-from .diarize import Segment as SegmentX
+from .segment import Segment as SegmentX
 
+AudioFile = Union[Text, Path, IOBase, Mapping]
 VAD_SEGMENTATION_URL = "https://whisperx.s3.eu-west-2.amazonaws.com/model_weights/segmentation/0b5b3216d60a2d32fc086b47ea8c67589aaeb26b7e07fcbe620d6d0b83e209ea/pytorch_model.bin"
 
+
 def load_vad_model(device, vad_onset=0.500, vad_offset=0.363, use_auth_token=None, model_fp=None):
+    import torch
+    from pyannote.audio import Model
+
     model_dir = torch.hub._get_torch_home()
     os.makedirs(model_dir, exist_ok = True)
     if model_fp is None:
@@ -26,6 +29,7 @@ def load_vad_model(device, vad_onset=0.500, vad_offset=0.363, use_auth_token=Non
         raise RuntimeError(f"{model_fp} exists and is not a regular file")
 
     if not os.path.isfile(model_fp):
+        print("Downloading VAD model")
         with urllib.request.urlopen(VAD_SEGMENTATION_URL) as source, open(model_fp, "wb") as output:
             with tqdm(
                 total=int(source.info().get("Content-Length")),
@@ -239,27 +243,6 @@ class VoiceActivitySegmentation(VoiceActivityDetection):
 
         return segmentations
 
-
-def merge_vad(vad_arr, pad_onset=0.0, pad_offset=0.0, min_duration_off=0.0, min_duration_on=0.0):
-
-    active = Annotation()
-    for k, vad_t in enumerate(vad_arr):
-        region = Segment(vad_t[0] - pad_onset, vad_t[1] + pad_offset)
-        active[region, k] = 1
-
-
-    if pad_offset > 0.0 or pad_onset > 0.0 or min_duration_off > 0.0:
-        active = active.support(collar=min_duration_off)
-    
-    # remove tracks shorter than min_duration_on
-    if min_duration_on > 0:
-        for segment, track in list(active.itertracks()):
-            if segment.duration < min_duration_on:
-                    del active[segment, track]
-    
-    active = active.for_json()
-    active_segs = pd.DataFrame([x['segment'] for x in active['content']])
-    return active_segs
 
 def merge_chunks(
     segments,

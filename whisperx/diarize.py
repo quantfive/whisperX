@@ -64,11 +64,4 @@ def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
                         speaker = dia_tmp.groupby("speaker")["intersection"].sum().sort_values(ascending=False).index[0]
                         word["speaker"] = speaker
         
-    return transcript_result            
-
-
-class Segment:
-    def __init__(self, start, end, speaker=None):
-        self.start = start
-        self.end = end
-        self.speaker = speaker
+    return transcript_result
