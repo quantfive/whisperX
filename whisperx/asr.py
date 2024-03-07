@@ -170,11 +170,11 @@ class FasterWhisperPipeline(Pipeline):
     ) -> TranscriptionResult:
 
         def data(audio, segments):
-            for seg in segments:
+            for i, seg in enumerate(segments):
                 f1 = int(seg['start'] * SAMPLE_RATE)
                 f2 = int(seg['end'] * SAMPLE_RATE)
                 # print(f2-f1)
-                yield {'inputs': audio[f1:f2]}
+                yield {'inputs': audio[i][f1:f2]}
 
         # def data(audio_chunks):
         #     for chunk in audio_chunks:
