@@ -1,6 +1,3 @@
-import os
-
-import pkg_resources
 from setuptools import setup
 
 setup(
@@ -14,12 +11,15 @@ setup(
     license="MIT",
     packages=["whisperx"],
     install_requires=[
-        str(r)
-        for r in pkg_resources.parse_requirements(
-            open(os.path.join(os.path.dirname(__file__), "requirements.txt"))
-        )
-    ]
-    + [f"pyannote.audio==3.1.1"],
+        "torch>=2",
+        "torchaudio>=2",
+        "faster-whisper==1.0.0",
+        "transformers",
+        "pandas",
+        "setuptools>=65",
+        "nltk",
+        "pyannote.audio==3.1.1"
+    ],
     include_package_data=True,
     extras_require={"dev": ["pytest"]},
 )
