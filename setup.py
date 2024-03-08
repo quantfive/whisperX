@@ -2,7 +2,7 @@ import os
 import platform
 
 import pkg_resources
-from setuptools import find_packages, setup
+from setuptools import setup
 
 setup(
     name="whisperx",
@@ -14,7 +14,7 @@ setup(
     author="Max Bain",
     url="https://github.com/m-bain/whisperx",
     license="MIT",
-    packages=find_packages(exclude=["tests*"]),
+    packages=["whisperx"],
     install_requires=[
         str(r)
         for r in pkg_resources.parse_requirements(
@@ -22,9 +22,6 @@ setup(
         )
     ]
     + [f"pyannote.audio==3.1.1"],
-    entry_points={
-        "console_scripts": ["whisperx=whisperx.transcribe:cli"],
-    },
     include_package_data=True,
     extras_require={"dev": ["pytest"]},
 )
