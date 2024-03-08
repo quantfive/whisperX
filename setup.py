@@ -1,12 +1,10 @@
 import os
-import platform
 
 import pkg_resources
 from setuptools import setup
 
 setup(
     name="whisperx",
-    py_modules=["whisperx"],
     version="3.1.1",
     description="Time-Accurate Automatic Speech Recognition using Whisper.",
     readme="README.md",
