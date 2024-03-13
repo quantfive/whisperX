@@ -172,6 +172,20 @@ class FasterWhisperPipeline(Pipeline):
             for chunk in audio_chunks:
                 yield chunk
 
+        if self.tokenizer is None:
+            language = language or self.detect_language(chunks)
+            task = task or "transcribe"
+            self.tokenizer = faster_whisper.tokenizer.Tokenizer(self.model.hf_tokenizer,
+                                                                self.model.model.is_multilingual, task=task,
+                                                                language=language)
+        else:
+            language = language or self.tokenizer.language_code
+            task = task or self.tokenizer.task
+            if task != self.tokenizer.task or language != self.tokenizer.language_code:
+                self.tokenizer = faster_whisper.tokenizer.Tokenizer(self.model.hf_tokenizer,
+                                                                    self.model.model.is_multilingual, task=task,
+                                                                    language=language)
+
         if self.suppress_numerals:
             previous_suppress_tokens = self.options.suppress_tokens
             numeral_symbol_tokens = find_numeral_symbol_tokens(self.tokenizer)
